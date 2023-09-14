@@ -6,72 +6,13 @@
 
 /*Operating and maintaining a queue */
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include "queue.h"
+#include "varlib.h"
  
 
 /* function main begins program execution */
-int main( void )
-{
-	QueueNodePtr headPtr = NULL; /* initialize headPtr */
-	QueueNodePtr tailPtr = NULL; /* initialize tailPtr */
-
-	char temp1;
-	int choice; /* user's menu choice */
-	char item; /* char input by user */
-	instructions(); /* display the menu */
-	printf( "? " );
-	scanf( "%d", &choice );
-
-/* while user does not enter 3 */
-	while ( choice != 3 ) {
-		switch( choice ) {
-
-/* enqueue value */
-			case 1:
-				printf( "Enter a character: " );
-				scanf( "\n%c", &item );
-				enqueue( &headPtr, &tailPtr, item );
-				printQueue( headPtr );
-			break;
-	
-	/* dequeue value */
-			case 2:
-	/* if queue is not empty */
-				if ( !isEmpty( headPtr ) ) {
-					item = dequeue( &headPtr, &tailPtr );
-				printf( "%c has been dequeued.\n", item );
-				} /* end if */
-				printQueue( headPtr );
-			break;
-			
-			case 3:
-				temp1 = queueSearch(&headPtr, "ass");
-			break;
-			
-			default:
-				printf( "Invalid choice.\n\n" );
-				instructions();
-			break;
-		} /* end switch */
-
-		printf( "? " );
-		scanf( "%d", &choice );
-	} /* end while */
-
-	printf( "End of run.\n" );
-	return 0; /* indicates successful termination */
-} /* end main */
-
-/* display program instructions to user */
-void instructions( void )
-{
-	printf ( "Enter your choice:\n"
-	" 1 to add an item to the queue\n"
-	" 2 to remove an item from the queue\n"
-	" 3 to end\n" );
-} /* end function instructions */
-
  
 
 /* insert a node a queue tail */
@@ -95,7 +36,7 @@ void enqueue( QueueNodePtr *headPtr, QueueNodePtr *tailPtr, char *value )
 		*tailPtr = newPtr;
 	} /* end if */
 	else {
-		printf( "%c not inserted. No memory available.\n", value );
+		printf( "%s not inserted. No memory available.\n", value );
 	} /* end else */
 } /* end function enqueue */
 
@@ -115,7 +56,7 @@ char dequeue( QueueNodePtr *headPtr, QueueNodePtr *tailPtr )
 	} /* end if */
 
 	free( tempPtr );
-	return value;
+	return *value;
 } /* end function dequeue */
 
 /* Return 1 if the list is empty, 0 otherwise */
@@ -125,25 +66,25 @@ int isEmpty( QueueNodePtr headPtr )
 } /* end function isEmpty */
 
 /* Print the queue */
-void printQueue( QueueNodePtr currentPtr )
-{
-/* if queue is empty */
-	if ( currentPtr == NULL ) {
-		printf( "Queue is empty.\n\n" );
-	} /* end if */
-	else {
-		printf( "The queue is:\n" );
+// void printQueue( QueueNodePtr currentPtr )
+// {
+// /* if queue is empty */
+// 	if ( currentPtr == NULL ) {
+// 		printf( "Queue is empty.\n\n" );
+// 	} /* end if */
+// 	else {
+// 		printf( "The queue is:\n" );
 
-/* while not end of queue */
-		while ( currentPtr != NULL ) {
-			printf( "%c --> ", currentPtr->argStr );
-			currentPtr = currentPtr->nextPtr;
-		} /* end while */
+// /* while not end of queue */
+// 		while ( currentPtr != NULL ) {
+// 			printf( "%c --> ", currentPtr->argStr );
+// 			currentPtr = currentPtr->nextPtr;
+// 		} /* end while */
 
-		printf( "NULL\n\n" );
-	} /* end else */
+// 		printf( "NULL\n\n" );
+// 	} /* end else */
 
-} /* end function printQueue */
+// } /* end function printQueue */
 
 char * queueSearch(QueueNodePtr currentPtr, char *name)
 {
@@ -153,4 +94,33 @@ char * queueSearch(QueueNodePtr currentPtr, char *name)
 	printf("%s", currentPtr->argStr);
 	return 0;
 
+}
+
+int queueStore(QueueNodePtr *headPtr, QueueNodePtr *tailPtr, char *name, char *val) {
+	char	*s;
+	int	rv = 1;
+	int len = strlen(name);
+
+	QueueNodePtr current = *headPtr;
+
+	while (current != NULL) {
+		if (strncmp(current->argStr, name, len) == 0) {
+			free(current->argStr);
+			current->argStr = new_string(name, val);
+			rv = 0;
+			break;
+		}
+
+		current = current->nextPtr;
+	}
+
+	if (current->nextPtr == NULL) {
+        s = new_string(name, val);
+        if (s != NULL) {
+            enqueue(headPtr, tailPtr, s);
+            rv = 0;
+        }
+    }
+	
+	return rv;
 }

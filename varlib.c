@@ -37,8 +37,11 @@ struct var {
 
 static struct var tab[MAXVARS];			/* the table	*/
 
-static char *new_string( char *, char *);	/* private methods	*/
-static struct var *find_item(char *, int);
+QueueNodePtr headPtr = NULL; /* initialize headPtr */
+QueueNodePtr tailPtr = NULL; /* initialize tailPtr */
+
+char *new_string( char *, char *);	/* private methods	*/
+QueueNodePtr find_item(char *, int);
 
 int VLstore( char *name, char *val )
 /*
@@ -47,18 +50,12 @@ int VLstore( char *name, char *val )
  * return 1 if trouble, 0 if ok (like a command)
  */
 {
-	struct var *itemp;
-	char	*s;
+
 	int	rv = 1;
 
-	/* find spot to put it              and make new string */
-	if ((itemp=find_item(name,1))!=NULL && (s=new_string(name,val))!=NULL) 
-	{
-		if ( itemp->str )		/* has a val?	*/
-			free(itemp->str);	/* y: remove it	*/
-		itemp->str = s;
-		rv = 0;				/* ok! */
-	}
+	if (queueStore(&headPtr, &tailPtr, name, val))
+		rv = 0;
+
 	return rv;
 }
 
@@ -80,12 +77,16 @@ char * VLlookup( char *name )
  * returns value of var or empty string if not there
  */
 {
-	struct var *itemp;
+	QueueNodePtr currentPtr;
 
-	if ( (itemp = find_item(name,0)) != NULL )
-		return itemp->str + 1 + strlen(name);
+	while (currentPtr != NULL)
+	{
+		if ( (currentPtr = find_item(name,0)) != NULL )
+			return currentPtr->argStr + 1 + strlen(name);
+	}
+	
+
 	return "";
-
 }
 
 int VLexport( char *name )
@@ -94,21 +95,21 @@ int VLexport( char *name )
  * returns 1 for no, 0 for ok
  */
 {
-	struct var *itemp;
+	QueueNodePtr currentPtr;
 	int	rv = 1;
 
-	if ( (itemp = find_item(name,0)) != NULL ){
-		itemp->global = 1;
+	if ( (currentPtr = find_item(name,0)) != NULL ){
+		currentPtr->global = 1;
 		rv = 0;
 	}
-	else if ( VLstore(name, "") == 1 )
+	else if ( queueStore(&headPtr, &tailPtr, name, "") == 1 )
 		rv = VLexport(name);
 	return rv;
 }
 
-static struct var * find_item( char *name , int first_blank )
+QueueNodePtr find_item( char *name , int first_blank )
 /*
- * searches table for an item
+ * searches list for an item
  * returns ptr to struct or NULL if not found
  * OR if (first_blank) then ptr to first blank one
  */
@@ -116,16 +117,20 @@ static struct var * find_item( char *name , int first_blank )
 	int	i;
 	int	len = strlen(name);
 	char	*s;
+	QueueNodePtr currentPtr = headPtr;
 
-	for( i = 0 ; i<MAXVARS && tab[i].str != NULL ; i++ )
+	// for( i = 0 ; i<MAXVARS && tab[i].str != NULL ; i++ )
+	while(currentPtr->nextPtr != NULL)
 	{
-		s = tab[i].str;
+		s = currentPtr->argStr;
 		if ( strncmp(s,name,len) == 0 && s[len] == '=' ){
-			return &tab[i];
+			return currentPtr;
 		}
+
+		currentPtr = currentPtr->nextPtr;
 	}
-	if ( i < MAXVARS && first_blank )
-		return &tab[i];
+	if ( currentPtr->nextPtr != NULL && first_blank )
+		return currentPtr;
 	return NULL;
 }
 
@@ -137,71 +142,67 @@ void VLlist()
  * exported variable with the symbol  '*' 
  */
 {
-	int	i;
-	for(i = 0 ; i<MAXVARS && tab[i].str != NULL ; i++ )
-	{
-		if ( tab[i].global )
-			printf("  * %s\n", tab[i].str);
-		else
-			printf("    %s\n", tab[i].str);
+	QueueNodePtr currentPtr = headPtr;
+	if (isEmpty(headPtr)) {
+		printf("No env variables detected");
+	} else {
+		while(currentPtr != NULL)
+		{
+			if ( currentPtr->global )
+				printf("  * %s\n", currentPtr->argStr);
+			else
+				printf("    %s\n", currentPtr->argStr);
+			currentPtr = currentPtr->nextPtr;
+		}
 	}
 }
 
 int VLenviron2table(char *env[])
 /*
- * initialize the variable table by loading array of strings
+ * initialize the variable list by loading array of strings
  * return 1 for ok, 0 for not ok
  */
 {
 	int     i;
-	char	*newstring;
-
-	for(i = 0 ; env[i] != NULL ; i++ )
-	{
-		if ( i == MAXVARS )
+	for (i = 0; env[i] != NULL; i++) {
+		if (i == MAXVARS) {
 			return 0;
-		newstring = malloc(1+strlen(env[i]));
-		if ( newstring == NULL )
-			return 0;
-		strcpy(newstring, env[i]);
-		tab[i].str = newstring;
-		tab[i].global = 1;
+		}
+		enqueue(&headPtr, &tailPtr, env[i]);
 	}
-	while( i < MAXVARS ){		/* I know we don't need this	*/
-		tab[i].str = NULL ;	/* static globals are nulled	*/
-		tab[i++].global = 0;	/* by default			*/
-	}
+	printf("test");
 	return 1;
 }
 
 char ** VLtable2environ()
 /*
- * build an array of pointers suitable for making a new environment
+ * build a list of pointers suitable for making a new environment
  * note, you need to free() this when done to avoid memory leaks
  */
 {
-	int	i,			/* index			*/
-		j,			/* another index		*/
-		n = 0;			/* counter			*/
-	char	**envtab;		/* array of pointers		*/
+	int i, j;
+	int n = 0;
+    char **envtab;
 
-	/*
-	 * first, count the number of global variables
-	 */
+    // Count the number of variables in the linked list
+    QueueNodePtr currentPtr = &headPtr;
+    while (currentPtr != NULL) {
+		if (currentPtr->global == 1)
+        	n++;
+        currentPtr = currentPtr->nextPtr;
+    }
 
-	for( i = 0 ; i<MAXVARS && tab[i].str != NULL ; i++ )
-		if ( tab[i].global == 1 )
-			n++;
+    // Allocate space for the array of pointers
+    envtab = (char **)malloc((n + 1) * sizeof(char *));
+    if (envtab == NULL)
+        return NULL;
 
-	/* then, allocate space for that many variables	*/
-	envtab = (char **) malloc( (n+1) * sizeof(char *) );
-	if ( envtab == NULL )
-		return NULL;
-
-	/* then, load the array with pointers		*/
-	for(i = 0, j = 0 ; i<MAXVARS && tab[i].str != NULL ; i++ )
-		if ( tab[i].global == 1 )
-			envtab[j++] = tab[i].str;
-	envtab[j] = NULL;
-	return envtab;
+    // Load the array with pointers
+    currentPtr = &headPtr;
+    while (currentPtr != NULL) {
+        envtab[i] = currentPtr->argStr;
+        currentPtr = currentPtr->nextPtr;
+    }
+    envtab[n] = NULL;
+    return envtab;
 }

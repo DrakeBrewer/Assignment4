@@ -12,13 +12,13 @@ clean:
 
 
 changeenv: envchange.c
-	gcc -o envchange envchange.c
+	gcc -o -w -Wall envchange envchange.c
 
 showenv: showenv.c
-	gcc -o showenv showenv.c
+	gcc -o -w -Wall showenv showenv.c
 
 smsh4: smsh4.c splitline.c execute2.c process2.c controlflow.c \
 		builtin.c varlib.c queue.c
-	gcc -o smsh4 smsh4.c splitline.c execute2.c process2.c controlflow.c \
+	gcc -o -w -Wall smsh4 smsh4.c splitline.c execute2.c process2.c controlflow.c \
 		builtin.c varlib.c queue.c
 

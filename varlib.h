@@ -9,3 +9,4 @@ void	VLlist();
 int	VLstore( char *, char * );
 char	**VLtable2environ();
 int	VLenviron2table(char **);
+char *new_string( char *, char * );
