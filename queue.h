@@ -14,3 +14,4 @@ int isEmpty( QueueNodePtr headPtr );
 char dequeue( QueueNodePtr *headPtr, QueueNodePtr *tailPtr );
 void enqueue( QueueNodePtr *headPtr, QueueNodePtr *tailPtr, char *value );
 int queueStore(QueueNodePtr *headPtr, QueueNodePtr *tailPtr, char *, char *);
+void printQueue( QueueNodePtr );

@@ -40,7 +40,7 @@
 	{
 	     extern char **environ;
 
-	     VLenviron2table(environ);
+	     VLenviron2list(environ);
 	     signal(SIGINT,  SIG_IGN);
 	     signal(SIGQUIT, SIG_IGN);
 	}

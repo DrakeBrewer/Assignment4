@@ -66,31 +66,28 @@ int isEmpty( QueueNodePtr headPtr )
 } /* end function isEmpty */
 
 /* Print the queue */
-// void printQueue( QueueNodePtr currentPtr )
-// {
-// /* if queue is empty */
-// 	if ( currentPtr == NULL ) {
-// 		printf( "Queue is empty.\n\n" );
-// 	} /* end if */
-// 	else {
-// 		printf( "The queue is:\n" );
+void printQueue( QueueNodePtr currentPtr )
+{
+/* if queue is empty */
+	if ( currentPtr == NULL ) {
+		printf( "Queue is empty.\n\n" );
+	} /* end if */
+	else {
+		printf( "The queue is:\n" );
 
-// /* while not end of queue */
-// 		while ( currentPtr != NULL ) {
-// 			printf( "%c --> ", currentPtr->argStr );
-// 			currentPtr = currentPtr->nextPtr;
-// 		} /* end while */
+/* while not end of queue */
+		while ( currentPtr != NULL ) {
+			printf( "%s --> ", currentPtr->argStr );
+			currentPtr = currentPtr->nextPtr;
+		} /* end while */
 
-// 		printf( "NULL\n\n" );
-// 	} /* end else */
+		printf( "NULL\n\n" );
+	} /* end else */
 
-// } /* end function printQueue */
+} /* end function printQueue */
 
 char * queueSearch(QueueNodePtr currentPtr, char *name)
-{
-	int i;
-	char temp;
-	
+{	
 	printf("%s", currentPtr->argStr);
 	return 0;
 

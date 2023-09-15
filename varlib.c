@@ -35,7 +35,6 @@ struct var {
 		int  global;		/* a boolean		*/
 	};
 
-static struct var tab[MAXVARS];			/* the table	*/
 
 QueueNodePtr headPtr = NULL; /* initialize headPtr */
 QueueNodePtr tailPtr = NULL; /* initialize tailPtr */
@@ -114,7 +113,6 @@ QueueNodePtr find_item( char *name , int first_blank )
  * OR if (first_blank) then ptr to first blank one
  */
 {
-	int	i;
 	int	len = strlen(name);
 	char	*s;
 	QueueNodePtr currentPtr = headPtr;
@@ -165,12 +163,9 @@ int VLenviron2table(char *env[])
 {
 	int     i;
 	for (i = 0; env[i] != NULL; i++) {
-		if (i == MAXVARS) {
-			return 0;
-		}
+		printf("%s", env[i]);
 		enqueue(&headPtr, &tailPtr, env[i]);
 	}
-	printf("test");
 	return 1;
 }
 
@@ -180,12 +175,12 @@ char ** VLtable2environ()
  * note, you need to free() this when done to avoid memory leaks
  */
 {
-	int i, j;
+	int i;
 	int n = 0;
     char **envtab;
 
     // Count the number of variables in the linked list
-    QueueNodePtr currentPtr = &headPtr;
+    QueueNodePtr currentPtr = headPtr;
     while (currentPtr != NULL) {
 		if (currentPtr->global == 1)
         	n++;
@@ -198,10 +193,12 @@ char ** VLtable2environ()
         return NULL;
 
     // Load the array with pointers
-    currentPtr = &headPtr;
+    currentPtr = headPtr;
     while (currentPtr != NULL) {
+		i = 0;
         envtab[i] = currentPtr->argStr;
         currentPtr = currentPtr->nextPtr;
+		i++;
     }
     envtab[n] = NULL;
     return envtab;
